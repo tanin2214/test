@@ -16,19 +16,23 @@ $ftpInfo = [
     'ftpPort'     => 21,
 ];
 
-
 $storage = getStorageClass($ftpInfo);
 
-$excelExchange = new XlsExchange();
+(new XlsExchange('test_export'))
+    ->renderExcel($result)
+    ->saveFile($storage);
 
-$excelExchange->renderExcel($result);
-$excelExchange->setXlsFileName('test_export');
-$excelExchange->saveFile($storage);
+function getJsonFromFile(): array
+{
+    $jsonFilePath = __DIR__.'/../order.json';
+    $orderData = getJsonData($jsonFilePath);
 
+    return prepareItemDataForReport($orderData['items']);
+}
 
 function getJsonData(string $fromFilePath): array
 {
-   return  json_decode(file_get_contents($fromFilePath), true);
+    return json_decode(file_get_contents($fromFilePath), true);
 }
 
 function prepareItemDataForReport(array $orderItems): array
@@ -52,14 +56,6 @@ function prepareItemDataForReport(array $orderItems): array
 function isBarcodeValid(string $barcodeToValidate): bool
 {
     return boolval(clsLibGTIN::GTINCheck($barcodeToValidate));
-}
-
-function getJsonFromFile(): array
-{
-    $jsonFilePath = __DIR__.'/../order.json';
-    $orderData = getJsonData($jsonFilePath);
-
-    return prepareItemDataForReport($orderData['items']);
 }
 
 function getStorageClass(array $ftpParams): StorageInterface

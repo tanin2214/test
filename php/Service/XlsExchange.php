@@ -1,31 +1,28 @@
 <?php
 
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 class XlsExchange
 {
+    private Spreadsheet $phpExcel;
 
-    private $phpExcel;
+    private Worksheet $activeSheet;
 
-    private $activeSheet;
+    private string $xlsFileName;
 
-    private $xlsFileName;
+    private string $tempXlsxPath;
 
-    private $tempXlsxPath;
-
-    public function __construct()
+    public function __construct(string $exportFileName)
     {
+        $this->xlsFileName = $exportFileName;
+        $this->setTempXlsPath();
+
         $this->phpExcel = new Spreadsheet();
         $this->activeSheet = $this->phpExcel->getActiveSheet();
 
-        $this->setUpPhpExcel();
         $this->setUpActiveSheet();
-    }
-
-    private function setUpPhpExcel()
-    {
-
     }
 
     private function setUpActiveSheet()
@@ -38,10 +35,12 @@ class XlsExchange
         $this->activeSheet->getStyle('A1:BB1')->applyFromArray($styleHeader);
     }
 
-    public function renderExcel(array $data) :void
+    public function renderExcel(array $data): self
     {
         $this->fillContentTableHeaders();
         $this->fillTableData($data);
+
+        return $this;
     }
 
     private function fillContentTableHeaders(): void
@@ -68,23 +67,20 @@ class XlsExchange
         }
     }
 
+    public function saveFile(StorageInterface $saver): self
+    {
+        $this->saveXlsToTmpDir();
+        $saver->save($this->tempXlsxPath);
+
+        return $this;
+    }
+
     private function saveXlsToTmpDir(): void
     {
         $this->setTempXlsPath();
 
         $writer = new Xlsx($this->phpExcel);
         $writer->save($this->tempXlsxPath);
-    }
-
-    public function saveFile(StorageInterface $saver): void
-    {
-        $this->saveXlsToTmpDir();
-        $saver->save($this->tempXlsxPath);
-    }
-
-    public function setXlsFileName(string $exportFileName): void
-    {
-        $this->xlsFileName = $exportFileName;
     }
 
     private function setTempXlsPath()
