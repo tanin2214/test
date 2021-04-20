@@ -1,5 +1,6 @@
 {
     "require": {
+        "php" : ">=7.4",
         "phpoffice/phpspreadsheet": "^1.17",
         "phpclasses/barcode-check": "^1.0"
     },

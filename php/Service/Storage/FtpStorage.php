@@ -8,10 +8,16 @@ class FtpStorage implements StorageInterface
     const TIMEOUT = 30;
 
     private string $ftpHost;
+
     private string $ftpLogin;
+
     private string $ftpPassword;
+
     private string $ftpDir;
+
     private int $ftpPort;
+
+    /** @var resource|false */
     private $connection;
 
     public function __construct(array $ftpInfo)

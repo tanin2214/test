@@ -4,6 +4,9 @@ use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
+/**
+ * Класс для генерация *.xlsx документа
+ */
 class XlsExchange
 {
     private Spreadsheet $phpExcel;
@@ -25,6 +28,9 @@ class XlsExchange
         $this->setUpActiveSheet();
     }
 
+    /**
+     *  Настройки листа документа xlsx
+     */
     private function setUpActiveSheet()
     {
         $styleHeader = [
@@ -43,6 +49,9 @@ class XlsExchange
         return $this;
     }
 
+    /**
+     *  Заполнение заголовка таблицы
+     */
     private function fillContentTableHeaders(): void
     {
         $this->activeSheet->setCellValue('A1', 'id');
@@ -52,6 +61,9 @@ class XlsExchange
         $this->activeSheet->setCellValue('E1', 'Сумма');
     }
 
+    /**
+     *  Заполнение таблицы данными
+     */
     private function fillTableData(array $data): void
     {
         $startRow = 2;
@@ -77,8 +89,6 @@ class XlsExchange
 
     private function saveXlsToTmpDir(): void
     {
-        $this->setTempXlsPath();
-
         $writer = new Xlsx($this->phpExcel);
         $writer->save($this->tempXlsxPath);
     }

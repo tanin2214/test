@@ -1,85 +1,32 @@
 <?php
 
-error_reporting(E_ALL & ~E_DEPRECATED);
-require_once (__DIR__.'/../vendor/autoload.php');
-require_once (__DIR__.'/Service/Storage/FtpStorage.php');
-require_once (__DIR__.'/Service/Storage/LocalStorage.php');
-require_once (__DIR__.'/Service/XlsExchange.php');
+require_once(dirname(__DIR__, 1) . '/vendor/autoload.php');
+require_once(__DIR__ . '/Service/Storage/FtpStorage.php');
+require_once(__DIR__ . '/Service/Storage/LocalStorage.php');
+require_once(__DIR__ . '/Service/Storage/StorageCreatorFactory.php');
+require_once(__DIR__ . '/Service/DataProvider/DataProvider.php');
+require_once(__DIR__ . '/Service/XlsExchange.php');
 
-$result = getJsonFromFile();
-
+/**
+ *  Входящие параметры для сохранения на FTP-сервер
+ *  Если $ftpInfo или один из параметров пустой,
+ *  то сохранение будет происходить
+ *  в директорию LocalStorageDirectory
+ */
 $ftpInfo = [
-    'ftpHost'     => 'files.000webhost.com',
-    'ftpLogin'    => 'ivantanin',
-    'ftpPassword' => 'ivan6012',
-    'ftpDir'      => '/',
+    'ftpHost'     => '',
+    'ftpLogin'    => '',
+    'ftpPassword' => '',
+    'ftpDir'      => '',
     'ftpPort'     => 21,
 ];
 
-$storage = getStorageClass($ftpInfo);
+$storage = StorageCreatorFactory::getStorage($ftpInfo);
+
+$jsonSourcePath = dirname(__DIR__, 1) . '/order.json';
+
+$jsonData = (new DataProvider())->getPreparedDataFrom($jsonSourcePath);
 
 (new XlsExchange('test_export'))
-    ->renderExcel($result)
+    ->renderExcel($jsonData)
     ->saveFile($storage);
-
-function getJsonFromFile(): array
-{
-    $jsonFilePath = __DIR__.'/../order.json';
-    $orderData = getJsonData($jsonFilePath);
-
-    return prepareItemDataForReport($orderData['items']);
-}
-
-function getJsonData(string $fromFilePath): array
-{
-    return json_decode(file_get_contents($fromFilePath), true);
-}
-
-function prepareItemDataForReport(array $orderItems): array
-{
-    $preparedData = [];
-
-    foreach ($orderItems as $orderItem) {
-        $preparedData[] = [
-            "id"             => $orderItem['item']['id'],
-            "barcode"        => $orderItem['item']['barcode'],
-            "isBarcodeValid" => isBarcodeValid($orderItem['item']['barcode']),
-            "name"           => $orderItem['item']['name'],
-            "quantity"       => $orderItem['quantity'],
-            "amount"         => $orderItem['amount'],
-        ];
-    }
-
-    return $preparedData;
-}
-
-function isBarcodeValid(string $barcodeToValidate): bool
-{
-    return boolval(clsLibGTIN::GTINCheck($barcodeToValidate));
-}
-
-function getStorageClass(array $ftpParams): StorageInterface
-{
-    if(validateFtpParams($ftpParams)){
-        $storage = new FtpStorage($ftpParams);
-    } else {
-        $storage = new LocalStorage(
-            __DIR__ . DIRECTORY_SEPARATOR . 'LocalStorageDirectory' . DIRECTORY_SEPARATOR
-        );
-    }
-
-    return $storage;
-}
-
-function validateFtpParams(array $ftpParams): bool
-{
-    $isParamsValid = !empty($ftpParams);
-
-    foreach ($ftpParams as $param) {
-        if (empty($param)) {
-            $isParamsValid = false;
-        }
-    }
-
-    return $isParamsValid;
-}
